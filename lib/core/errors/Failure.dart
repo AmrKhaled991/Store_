@@ -1,0 +1,52 @@
+import 'package:dio/dio.dart';
+
+class Failure {
+  String messege;
+  Failure(
+    this.messege,
+  );
+}
+
+class ServierError extends Failure {
+  ServierError(
+    super.messege,
+  );
+  factory ServierError.fromDioError(DioException dioException) {
+    switch (dioException.type) {
+      case DioExceptionType.connectionTimeout:
+        return ServierError('sorry connectionTimeout,try again later');
+      case DioExceptionType.sendTimeout:
+        return ServierError('sorry sendTimeout,try again later');
+      case DioExceptionType.receiveTimeout:
+        return ServierError('sorry receiveTimeout,try again later');
+      case DioExceptionType.badCertificate:
+        return ServierError('sorry badCertificate,try again later');
+      case DioExceptionType.badResponse:
+        return ServierError.BadResponse(
+          dioException.response!.statusCode!,
+          dioException.response?.data,
+        );
+      case DioExceptionType.cancel:
+        return ServierError('sorry cancel requste,try again later');
+      case DioExceptionType.connectionError:
+        return ServierError('sorry cancel connectionError,try again later');
+      case DioExceptionType.unknown:
+        if (dioException.message!.contains('SocketException')) {
+          return ServierError('no internet conection');
+        } else
+          return ServierError('unexpected error,plz try again later');
+      default:
+        return ServierError('Ops somthing went wronge ,plz try agein later');
+    }
+  }
+  factory ServierError.BadResponse(int status, dynamic response) {
+    if (status == 401 || status == 409) {
+      return ServierError(response['message']);
+    } else if (status == 404) {
+      return ServierError('Requste not found');
+    } else if (status == 400)
+      return ServierError(response['message']);
+    else
+      return ServierError('Ops somthing went wronge ,plz try agein later');
+  }
+}
